@@ -1,0 +1,29 @@
+syntax = "proto3";
+package turbomessage;
+
+service TurboMessage {
+    rpc registrarUsuario(Usuario) returns (Status) {};
+    rpc checarUsuario(Usuario) returns (Status) {};
+    rpc mandarCorreo(Correo) returns (Status) {};
+    rpc leerCorreos(Usuario) returns (stream Correo) {};
+    rpc borrarCorreo(Correo) returns (Status) {};
+}
+
+message Status {
+    optional bool exito = 1;
+    optional string razon = 2;
+}
+
+message Usuario {
+    optional string username = 1;
+    optional string password = 2;
+}
+
+message Correo {
+    optional int32 id = 1;
+    optional string tema = 2;
+    optional string emisor = 3;
+    optional string destinatario = 4;
+    optional string mensaje = 5;
+    optional bool leido = 6;
+}
