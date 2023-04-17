@@ -39,8 +39,13 @@ class TurboMessageStub(object):
                 request_serializer=turbomessage__pb2.Usuario.SerializeToString,
                 response_deserializer=turbomessage__pb2.Correo.FromString,
                 )
-        self.borrarCorreo = channel.unary_unary(
-                '/turbomessage.TurboMessage/borrarCorreo',
+        self.borrarCorreoEntrada = channel.unary_unary(
+                '/turbomessage.TurboMessage/borrarCorreoEntrada',
+                request_serializer=turbomessage__pb2.Correo.SerializeToString,
+                response_deserializer=turbomessage__pb2.Status.FromString,
+                )
+        self.borrarCorreoSalida = channel.unary_unary(
+                '/turbomessage.TurboMessage/borrarCorreoSalida',
                 request_serializer=turbomessage__pb2.Correo.SerializeToString,
                 response_deserializer=turbomessage__pb2.Status.FromString,
                 )
@@ -84,7 +89,13 @@ class TurboMessageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def borrarCorreo(self, request, context):
+    def borrarCorreoEntrada(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def borrarCorreoSalida(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -124,8 +135,13 @@ def add_TurboMessageServicer_to_server(servicer, server):
                     request_deserializer=turbomessage__pb2.Usuario.FromString,
                     response_serializer=turbomessage__pb2.Correo.SerializeToString,
             ),
-            'borrarCorreo': grpc.unary_unary_rpc_method_handler(
-                    servicer.borrarCorreo,
+            'borrarCorreoEntrada': grpc.unary_unary_rpc_method_handler(
+                    servicer.borrarCorreoEntrada,
+                    request_deserializer=turbomessage__pb2.Correo.FromString,
+                    response_serializer=turbomessage__pb2.Status.SerializeToString,
+            ),
+            'borrarCorreoSalida': grpc.unary_unary_rpc_method_handler(
+                    servicer.borrarCorreoSalida,
                     request_deserializer=turbomessage__pb2.Correo.FromString,
                     response_serializer=turbomessage__pb2.Status.SerializeToString,
             ),
@@ -230,7 +246,7 @@ class TurboMessage(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def borrarCorreo(request,
+    def borrarCorreoEntrada(request,
             target,
             options=(),
             channel_credentials=None,
@@ -240,7 +256,24 @@ class TurboMessage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/turbomessage.TurboMessage/borrarCorreo',
+        return grpc.experimental.unary_unary(request, target, '/turbomessage.TurboMessage/borrarCorreoEntrada',
+            turbomessage__pb2.Correo.SerializeToString,
+            turbomessage__pb2.Status.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def borrarCorreoSalida(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/turbomessage.TurboMessage/borrarCorreoSalida',
             turbomessage__pb2.Correo.SerializeToString,
             turbomessage__pb2.Status.FromString,
             options, channel_credentials,
