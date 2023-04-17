@@ -57,11 +57,25 @@ class TurboMessage(turbomessage_pb2_grpc.TurboMessageServicer):
     
     ## Chance el stream no jale y sea mejor mandar el arreglo completo
     ## Podriamos poner un lock aqui no se
-    def leerCorreos(self, request, context):
+    def leerCorreosEntrada(self, request, context):
         try:
             TurboMessage.lock_leerCorreos.acquire()
             correosUsuario = TurboMessage.bd[request.username]
             for correo in correosUsuario:
+                yield correo
+            TurboMessage.lock_leerCorreos.release()
+        except Exception:
+            print("Error!")
+
+    def leerCorreosSalida(self, request, context):
+        try:
+            correosSalida = []
+            TurboMessage.lock_leerCorreos.acquire()
+            for arrCorreos in TurboMessage.bd.values():
+                for correo in arrCorreos:
+                    if correo.emisor == request.username:
+                        correosSalida.append(correo)
+            for correo in correosSalida:
                 yield correo
             TurboMessage.lock_leerCorreos.release()
         except Exception:

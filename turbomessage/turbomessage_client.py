@@ -4,15 +4,18 @@ import sys
 import turbomessage_pb2
 import turbomessage_pb2_grpc
 
+### CONTEXT CONTINUITY
+## Resuelve que la bandeja de salida no tiene limite
+
+
 class Cliente_TurboMessage():
+
+    num_maxCorreos = 5
 
     def __init__(self, target):
         self.target = target
         self.channel = grpc.insecure_channel(target)
         self.stub = turbomessage_pb2_grpc.TurboMessageStub(self.channel)
-
-        self.listaCorreos = []
-        self.listaCorreosSalida = []
 
     def clear_screen(self):
         if os.name == 'nt':
@@ -133,40 +136,44 @@ class Cliente_TurboMessage():
                 print("Esa opción no existe. Intente de nuevo.")
 
     def mandarCorreo(self):
-        print((" " * 30) + "Escribe tu correo")
-        tema = input("Tema: ")
-        destino = input("Destino: ")
-        print()
-        print("Contenido: [Para finalizar contenido escriba la palabra 'fin' en una nueva línea y pique enter.]")
-        contenido = ""
-        siguienteLinea = ""
-        while siguienteLinea != "fin":
-            contenido = contenido + siguienteLinea + "\n"
-            siguienteLinea = input()
+        if len(self.listaCorreosSalida) <= Cliente_TurboMessage.num_maxCorreos:
+            print((" " * 30) + "Escribe tu correo")
+            tema = input("Tema: ")
+            destino = input("Destino: ")
+            print()
+            print("Contenido: [Para finalizar contenido escriba la palabra 'fin' en una nueva línea y pique enter.]")
+            contenido = ""
+            siguienteLinea = ""
+            while siguienteLinea != "fin":
+                contenido = contenido + siguienteLinea + "\n"
+                siguienteLinea = input()
 
-        while True:
-            decision_mandar = input("Desea mandar el correo? (s/n) -> ")
-            if decision_mandar == "s":
-                correo = turbomessage_pb2.Correo(tema=tema, emisor=self.usuario.username, destinatario=destino, mensaje=contenido)
-                respuesta = self.stub.mandarCorreo(correo)
-                if respuesta.exito == True:
-                    self.listaCorreosSalida.append(correo)
-                    print("Correo enviado.")
+            while True:
+                decision_mandar = input("Desea mandar el correo? (s/n) -> ")
+                if decision_mandar == "s":
+                    correo = turbomessage_pb2.Correo(tema=tema, emisor=self.usuario.username, destinatario=destino, mensaje=contenido)
+                    respuesta = self.stub.mandarCorreo(correo)
+                    if respuesta.exito == True:
+                        self.listaCorreosSalida.append(correo)
+                        print("Correo enviado.")
+                        break
+                    else:
+                        print(respuesta.razon + " Intente de nuevo más tarde.")
+                        break
+                elif decision_mandar == "n":
+                    print("Correo no enviado.")
                     break
-                else:
-                    print(respuesta.razon + " Intente de nuevo más tarde.")
+            
+            print()
+            while True:
+                decision_regresar = input("Desear regresar a la bandeja de entrada? (s/n) -> ")
+                if decision_regresar == "s":
                     break
-            elif decision_mandar == "n":
-                print("Correo no enviado.")
-                break
+            self.clear_screen()
+        else:
+            self.clear_screen()
+            print("Borra correos de la bandeja de salida para poder mandar un correo.")
         
-        print()
-        while True:
-            decision_regresar = input("Desear regresar a la bandeja de entrada? (s/n) -> ")
-            if decision_regresar == "s":
-                break
-        
-        self.clear_screen()
         self.show_bandejaEntrada()
 
     def leerCorreo(self):
@@ -220,11 +227,14 @@ class Cliente_TurboMessage():
                     if (len(self.listaCorreos) >= int(num_correo)) and (int(num_correo) > 0):
                         if decisionBandeja == "entrada":
                             correo = self.listaCorreos[int(num_correo) - 1]
+                            respuesta = self.stub.borrarCorreo(correo)
+                            exito = respuesta.exito
                         else:
-                            correo = self.listaCorreosSalida[int(num_correo) - 1]
-                        respuesta = self.stub.borrarCorreo(correo)
+                            self.listaCorreosSalida.pop(int(num_correo) - 1)
+                            exito = True
+
                         self.clear_screen()
-                        if respuesta.exito == True:
+                        if exito == True:
                             print("Correo borrado exitosamente.\n")
                         else:
                             print("Correo no existe.\n")
@@ -238,7 +248,8 @@ class Cliente_TurboMessage():
 
     def fetch_bandejaEntrada(self):
         i = 1
-        for correo in self.stub.leerCorreos(self.usuario):
+        self.listaCorreos = []
+        for correo in self.stub.leerCorreosEntrada(self.usuario):
             self.listaCorreos.append(correo)
             stringCorreo = str(i) + ". " + correo.emisor + " | " + correo.tema
             print(stringCorreo)
@@ -246,7 +257,9 @@ class Cliente_TurboMessage():
     
     def fetch_bandejaSalida(self):
         i = 1
-        for correo in self.listaCorreosSalida:
+        self.listaCorreosSalida = []
+        for correo in self.stub.leerCorreosSalida(self.usuario):
+            self.listaCorreosSalida.append(correo)
             stringCorreo = str(i) + ". " + correo.destinatario + " | " + correo.tema
             if correo.leido:
                 stringCorreo = stringCorreo + " (LEIDO)"

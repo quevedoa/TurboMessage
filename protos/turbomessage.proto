@@ -5,7 +5,8 @@ service TurboMessage {
     rpc registrarUsuario(Usuario) returns (Status) {};
     rpc checarUsuario(Usuario) returns (Status) {};
     rpc mandarCorreo(Correo) returns (Status) {};
-    rpc leerCorreos(Usuario) returns (stream Correo) {};
+    rpc leerCorreosEntrada(Usuario) returns (stream Correo) {};
+    rpc leerCorreosSalida(Usuario) returns (stream Correo) {}; 
     rpc borrarCorreo(Correo) returns (Status) {};
     rpc correoLeido(Correo) returns (Status) {};
 }

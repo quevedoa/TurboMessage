@@ -29,8 +29,13 @@ class TurboMessageStub(object):
                 request_serializer=turbomessage__pb2.Correo.SerializeToString,
                 response_deserializer=turbomessage__pb2.Status.FromString,
                 )
-        self.leerCorreos = channel.unary_stream(
-                '/turbomessage.TurboMessage/leerCorreos',
+        self.leerCorreosEntrada = channel.unary_stream(
+                '/turbomessage.TurboMessage/leerCorreosEntrada',
+                request_serializer=turbomessage__pb2.Usuario.SerializeToString,
+                response_deserializer=turbomessage__pb2.Correo.FromString,
+                )
+        self.leerCorreosSalida = channel.unary_stream(
+                '/turbomessage.TurboMessage/leerCorreosSalida',
                 request_serializer=turbomessage__pb2.Usuario.SerializeToString,
                 response_deserializer=turbomessage__pb2.Correo.FromString,
                 )
@@ -67,7 +72,13 @@ class TurboMessageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def leerCorreos(self, request, context):
+    def leerCorreosEntrada(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def leerCorreosSalida(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -103,8 +114,13 @@ def add_TurboMessageServicer_to_server(servicer, server):
                     request_deserializer=turbomessage__pb2.Correo.FromString,
                     response_serializer=turbomessage__pb2.Status.SerializeToString,
             ),
-            'leerCorreos': grpc.unary_stream_rpc_method_handler(
-                    servicer.leerCorreos,
+            'leerCorreosEntrada': grpc.unary_stream_rpc_method_handler(
+                    servicer.leerCorreosEntrada,
+                    request_deserializer=turbomessage__pb2.Usuario.FromString,
+                    response_serializer=turbomessage__pb2.Correo.SerializeToString,
+            ),
+            'leerCorreosSalida': grpc.unary_stream_rpc_method_handler(
+                    servicer.leerCorreosSalida,
                     request_deserializer=turbomessage__pb2.Usuario.FromString,
                     response_serializer=turbomessage__pb2.Correo.SerializeToString,
             ),
@@ -180,7 +196,7 @@ class TurboMessage(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def leerCorreos(request,
+    def leerCorreosEntrada(request,
             target,
             options=(),
             channel_credentials=None,
@@ -190,7 +206,24 @@ class TurboMessage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/turbomessage.TurboMessage/leerCorreos',
+        return grpc.experimental.unary_stream(request, target, '/turbomessage.TurboMessage/leerCorreosEntrada',
+            turbomessage__pb2.Usuario.SerializeToString,
+            turbomessage__pb2.Correo.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def leerCorreosSalida(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/turbomessage.TurboMessage/leerCorreosSalida',
             turbomessage__pb2.Usuario.SerializeToString,
             turbomessage__pb2.Correo.FromString,
             options, channel_credentials,
