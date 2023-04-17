@@ -11,9 +11,11 @@ class TurboMessage(turbomessage_pb2_grpc.TurboMessageServicer):
     numMaxCorreos = 5
     folio_correos = 0
 
-    lock_registroUsuario = threading.lock()
-    lock_mandarCorreo = threading.lock()
-    lock_borrarCorreo = threading.lock()
+    lock_registroUsuario = threading.Lock()
+    lock_mandarCorreo = threading.Lock()
+    lock_borrarCorreo = threading.Lock()
+    lock_leerCorreos = threading.Lock()
+    lock_correoLeido = threading.Lock()
 
     def checarUsuario(self, request, context):
         for usuario in TurboMessage.usuarios:
@@ -29,8 +31,9 @@ class TurboMessage(turbomessage_pb2_grpc.TurboMessageServicer):
         TurboMessage.lock_registroUsuario.acquire()
         TurboMessage.usuarios.append(request)
         TurboMessage.bd[request.username] = []
+        print(TurboMessage.usuarios)
         TurboMessage.lock_registroUsuario.release()
-        
+
         return turbomessage_pb2.Status(exito=True, razon="Usuario registrado exitosamente.")
     
     def mandarCorreo(self, request, context):
@@ -55,10 +58,28 @@ class TurboMessage(turbomessage_pb2_grpc.TurboMessageServicer):
     ## Chance el stream no jale y sea mejor mandar el arreglo completo
     ## Podriamos poner un lock aqui no se
     def leerCorreos(self, request, context):
-        correosUsuario = TurboMessage.bd[request.username]
-        for correo in correosUsuario:
-            yield correo
+        try:
+            TurboMessage.lock_leerCorreos.acquire()
+            correosUsuario = TurboMessage.bd[request.username]
+            for correo in correosUsuario:
+                yield correo
+            TurboMessage.lock_leerCorreos.release()
+        except Exception:
+            print("Error!")
     
+    def correoLeido(self, request, context):
+        correosUsuario = TurboMessage.bd[request.destinatario]
+        for i in range(0, len(correosUsuario)):
+            if correosUsuario[i].id == request.id:
+
+                TurboMessage.lock_leerCorreos.acquire()
+                correoLeido = correosUsuario[i]
+                correosUsuario[i] = turbomessage_pb2.Correo(id=correoLeido.id, tema=correoLeido.tema, emisor=correoLeido.emisor, destinatario=correoLeido.destinatario, mensaje=correoLeido.mensaje, leido=True)
+                TurboMessage.lock_leerCorreos.release()
+
+                return turbomessage_pb2.Status(exito=True, razon="Correo leido exitosamente.")
+        return turbomessage_pb2.Status(exito=False, razon="No existe correo.")
+
     def borrarCorreo(self, request, context):
         correosUsuario = TurboMessage.bd[request.destinatario]
         for i in range(0, len(correosUsuario)):
@@ -69,10 +90,10 @@ class TurboMessage(turbomessage_pb2_grpc.TurboMessageServicer):
                 TurboMessage.lock_borrarCorreo.release()
 
                 return turbomessage_pb2.Status(exito=True, razon="Correo borrado exitosamente.")
-        return turbomessage_pb2.Status(exito=False, razon="Correo a borrar no existe.")
+        return turbomessage_pb2.Status(exito=False, razon="No existe correo.")
 
 def empezarServidor_TurboMessage():
-    puerto = "500200"
+    puerto = "50200"
     servidor = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     turbomessage_pb2_grpc.add_TurboMessageServicer_to_server(TurboMessage(), servidor)
     servidor.add_insecure_port("[::]:" + puerto)

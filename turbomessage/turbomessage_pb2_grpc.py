@@ -39,6 +39,11 @@ class TurboMessageStub(object):
                 request_serializer=turbomessage__pb2.Correo.SerializeToString,
                 response_deserializer=turbomessage__pb2.Status.FromString,
                 )
+        self.correoLeido = channel.unary_unary(
+                '/turbomessage.TurboMessage/correoLeido',
+                request_serializer=turbomessage__pb2.Correo.SerializeToString,
+                response_deserializer=turbomessage__pb2.Status.FromString,
+                )
 
 
 class TurboMessageServicer(object):
@@ -74,6 +79,12 @@ class TurboMessageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def correoLeido(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TurboMessageServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -99,6 +110,11 @@ def add_TurboMessageServicer_to_server(servicer, server):
             ),
             'borrarCorreo': grpc.unary_unary_rpc_method_handler(
                     servicer.borrarCorreo,
+                    request_deserializer=turbomessage__pb2.Correo.FromString,
+                    response_serializer=turbomessage__pb2.Status.SerializeToString,
+            ),
+            'correoLeido': grpc.unary_unary_rpc_method_handler(
+                    servicer.correoLeido,
                     request_deserializer=turbomessage__pb2.Correo.FromString,
                     response_serializer=turbomessage__pb2.Status.SerializeToString,
             ),
@@ -192,6 +208,23 @@ class TurboMessage(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/turbomessage.TurboMessage/borrarCorreo',
+            turbomessage__pb2.Correo.SerializeToString,
+            turbomessage__pb2.Status.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def correoLeido(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/turbomessage.TurboMessage/correoLeido',
             turbomessage__pb2.Correo.SerializeToString,
             turbomessage__pb2.Status.FromString,
             options, channel_credentials,

@@ -7,6 +7,7 @@ service TurboMessage {
     rpc mandarCorreo(Correo) returns (Status) {};
     rpc leerCorreos(Usuario) returns (stream Correo) {};
     rpc borrarCorreo(Correo) returns (Status) {};
+    rpc correoLeido(Correo) returns (Status) {};
 }
 
 message Status {
